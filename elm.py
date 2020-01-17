@@ -2,9 +2,23 @@ import numpy as np
 from util import *
 
 class ELM(object):
+    def __init__(self,hn,x,y):
+        self.hiddennodes = hn
+        self.input  = x
+        self.output = y    
     def init_weights(self,xcol,hiddennodes):
-         return np.random.rand(xcol,hiddennodes)
-    def insert_bias(self,matrix):
-        return addBias(matrix)
+        '''
+        FUNÇÃO QUE INICIALIZA OS PESO QUE LIGAM A CAMADA DE ENTRADA À CAMADA ESCONDIDA, Wh
+        RECEBE COMO ARGUMENTOS O NÚMERO DE COLUNAS DE DA ENTRADA E O NÚMERO DE NEURÔNIOS NA CAMADA ESCONDIDA.  
+        '''     
+        return addBias(np.random.rand(xcol,hiddennodes))
     def pinv(self,matrix):
+        '''
+        RETORNA APSEUDO INVERSA DE UMA MATRIZ 
+        '''
         return np.linalg.pinv(matrix)
+    def getW0(self,netInv):
+        '''
+        RETORNA OS PESOS QUE LIGAM A CAMADA ESCONDIDA À SAÍDA
+        '''
+        return np.dot(netInv,self.output)

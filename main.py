@@ -1,15 +1,17 @@
 import numpy as np
 from elm import *
+from util import *
 
 if __name__ == '__main__':
-    elm = ELM()
-    wh = elm.init_weights(21,5)
-    wh = elm.insert_bias(wh)
-    #print(wh)
+    x = np.random.randint(60,size=(123,20))
+    x = addBias(x)
+    y = np.random.randint(60,size=(123,1))
+    
+    elm = ELM(5,x,y)
+    wh = elm.init_weights(x[0].__len__(),elm.hiddennodes)
 
-    x = np.random.rand(123,20)
-    x = elm.insert_bias(x)
+    #net = x.dot(wh)
+    netInv = elm.pinv(x.dot(wh))
 
-    net = x.dot(wh)
-    netInv = elm.pinv(net)
-    print(netInv)
+    w0 = elm.getW0(netInv)
+    print(w0)
