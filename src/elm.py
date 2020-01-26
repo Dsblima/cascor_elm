@@ -1,4 +1,14 @@
+import sys, os
 import numpy as np
+
+sys.path.append(
+	os.path.join(
+		os.path.dirname(__file__), 
+		'..', 
+		'utils'
+	)
+)
+
 from util import *
 
 class ELM(object):
