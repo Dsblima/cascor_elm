@@ -27,10 +27,14 @@ if __name__ == '__main__':
     w0 = elm.getW0(netInv)
     print(w0)
     """
-    num_hidden_nodes = 1
+
+    num_hidden_nodes = 8000
+    hiddennodes = list(range(num_hidden_nodes))
     neti = np.zeros((num_hidden_nodes,1))
     cascade: Cascade = Cascade(num_hidden_nodes)
     cascade.load_and_preprocess_data()
+    # for i in hiddennodes:
+    #     print(i)
     neti= cascade.insertHiddenUnit()
     elm = ELM(1,cascade.X_train,cascade.y_train)
     netInv = elm.pinv(neti)

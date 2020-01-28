@@ -23,9 +23,10 @@ from sklearn                 import preprocessing
 class Cascade(object):
 
   def __init__(self, numMaxHiddenNodes):
-    self.ensemble = dict.fromkeys(list(range(numMaxHiddenNodes)))
-    self.weightsDic = dict.fromkeys(list(range(numMaxHiddenNodes)))
-    self.residualError = dict.fromkeys(list(range(numMaxHiddenNodes)))
+    self.numHiddenNodes = numMaxHiddenNodes
+    self.ensemble = dict.fromkeys(list(range(self.numHiddenNodes)))
+    self.weightsArray = []
+    self.residualError = []
 
     self.X_train=[]
     self.X_test=[]
@@ -48,24 +49,29 @@ class Cascade(object):
     self.y_train = self.y_train[self.y_train.columns[0]].values
     self.y_test = self.y_test[self.y_test.columns[0]].values
 
+  def init_weights(self,xcol,hiddennodes):    
+    return (np.random.rand(xcol,hiddennodes))
+
   def insertHiddenUnit(self):
-    wh = self.init_weights(self.X_train[0].__len__(),1)
-    self.weightsDic[0] = wh
+    wh = self.init_weights(self.X_train[0].__len__(),self.numHiddenNodes)
+    self.weightsArray.append(wh)
+    # print("wh shape")
     # print(wh.shape)
     return self.forward(wh)
 
   def forward(self,wh):
     ent = np.dot( self.X_train,wh)
     neti = sigmoid(ent)
+    # print(neti)
     return neti
-  
-  def init_weights(self,xcol,hiddennodes):    
-    return (np.random.rand(xcol,hiddennodes))
 
   def calculateResidualError(self,w0,neti):
-    calc = neti.T*w0
+    preds = []
+    calc = neti.dot(w0.T)
+
+    print(calc)
     print("Erro percentual médio absoluto")
-    print(mean_absolute_percentage_error(self.y_train,calc[0]))
+    print(mean_absolute_percentage_error(self.y_train,calc))
   
   def saveModel(self):
     print("salvar o modelo")
