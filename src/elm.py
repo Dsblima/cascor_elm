@@ -21,7 +21,7 @@ class ELM(object):
         FUNÇÃO QUE INICIALIZA OS PESO QUE LIGAM A CAMADA DE ENTRADA À CAMADA ESCONDIDA, Wh
         RECEBE COMO ARGUMENTOS O NÚMERO DE COLUNAS DE DA ENTRADA E O NÚMERO DE NEURÔNIOS NA CAMADA ESCONDIDA.  
         '''     
-        return addBias(np.random.rand(xcol,hiddennodes))
+        return (np.random.rand(xcol,hiddennodes))
     def pinv(self,matrix):
         '''
         RETORNA APSEUDO INVERSA DE UMA MATRIZ 

@@ -17,6 +17,7 @@ from ErroPercentualAbsoluto import *
 import Arquivo
 
 from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing   import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn                 import preprocessing
@@ -28,31 +29,42 @@ class Cascade(object):
     self.ensemble = {}
     self.weightsArray = {}
     self.residualError = []
+    self.mapeArray = []
 
     self.X_train=[]
     self.X_test=[]
     self.y_train=[]
     self.y_test=[]
-
+    self.menor = 100000000
+    # self.dataNX=[]
+    # self.listMin=[]
+    # self.listMax=[]    
+    # self.dataNY=[]
+    # self.listMinY=[]
+    # self.listMaxY=[]
+    
   def load_and_preprocess_data(self):
     # TESTE COM A BASE airlines 2
-    # data = Arquivo.ler('../data/airlines2.txt')
-    # dh:DataHandler = DataHandler(data, 12, 60, 20,20)
-    # self.X_train, self.y_train, val_set, val_target, self.X_test, self.y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, 12, 60, 20,20)
+    data = Arquivo.ler('../data/airlines2.txt')
+    dh:DataHandler = DataHandler(data, 12, 60, 20,20)
+    self.X_train, self.y_train, val_set, val_target, self.X_test, self.y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, 12, 60, 20,20)
 
-    # y = [[]]
-    # x = np.concatenate( ((self.X_train),(self.X_test)) ) 
-    # y = np.matrix( np.concatenate( (np.array(self.y_train),np.array(self.y_test)) ))
-    # data = np.concatenate((x, y.T), axis=1)
-    # x, y = Padronizar.dividir(data, 12, 1)
+    y = [[]]
+    x = np.concatenate( ((self.X_train),(self.X_test)) ) 
+    y = np.matrix( np.concatenate( (np.array(self.y_train),np.array(self.y_test)) ))
+    data = np.concatenate((x, y.T), axis=1)
+    x, y = Padronizar.dividir(data, 12, 1)
 
 
-    data = Arquivo.ler('../data/projeto base completa.csv')
-    x, y = Padronizar.dividir(data, 60, 12)
-    minmaxscaler = MinMaxScaler(feature_range=(0,1))
-    dataNX, listMin,  listMax  = Padronizar.normalizarLinear(x, 0.1, 0.9)
-    dataNY, listMin1, listMax2 = Padronizar.normalizarLinear(y, 0.1, 0.9)
-    self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(dataNX, dataNY, train_size = 0.8, test_size  = 0.2)
+    # data = Arquivo.ler('../data/projeto base completa.csv')
+    # x, y = Padronizar.dividir(data, 4, 1)
+    # print("y")
+    # print(y[y.columns[0]])
+    # minmaxscaler = MinMaxScaler(feature_range=(0,1))
+    self.dataNX, self.listMin,  self.listMax  = Padronizar.normalizarLinear(x, 0.1, 0.9)
+    self.dataNY, self.listMinY, self.listMaxY = Padronizar.normalizarLinear(y, 0.1, 0.9)
+    # self.scalerX,self.scalerY, self.dataNormalizadoX, self.dataNormalizadoY = Padronizar.normalizar(x,y)
+    self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.dataNX, self.dataNY, train_size = 0.8, test_size  = 0.2)
     self.X_train = addBias(self.X_train.values)
     
     self.X_test  = addBias(self.X_test.values)
@@ -65,57 +77,52 @@ class Cascade(object):
 
   def insertHiddenUnit(self,i):
     numCol = self.X_train[0].__len__()+i
-    # print(numCol)
-    wh = self.init_weights(numCol)
-    # print("weightsArray shape")
-    # print(wh.shape)
-
-    # if i==0:
-    #   self.weightsArray = wh
-    # else:
-      # print("weightsArray shape")
-      # print(self.weightsArray.shape)
-      # self.weightsArray = np.matrix(np.concatenate( (self.weightsArray,wh), axis=1))
-    self.weightsArray[i] = wh
-    # print(self.weightsArray)
-    # sys.exit(-1)
     
-    return self.forward(self.weightsArray)
+    wh = self.init_weights(numCol)
 
-  def forward(self,wh):
-    netis = [[]]
-    x_train = self.X_train
-    for node, weights in self.weightsArray.items():
+    self.weightsArray[i] = wh
+    
+    return self.forward(self.weightsArray,self.X_train)
+
+  def forward(self,wh,input):
+    netis = [[]]    
+    for node, weights in wh.items():
       if node == 0:
         
-        ent = np.dot( x_train,weights)
+        ent = np.dot( input,weights)
         neti = sigmoid(ent)      
         netis = neti
       else:
-        # print(neti.shape)
-        x_train = np.concatenate((x_train,neti),axis=1)
-        ent = np.dot( x_train,weights)
+        
+        input = np.concatenate((input,neti),axis=1)
+        ent = np.dot( input,weights)
         neti = sigmoid(ent)      
-        netis = np.concatenate((netis,neti), axis=1)
-        # print(x_train.shape)      
+        netis = np.concatenate((netis,neti), axis=1)            
     netis = addBias(np.matrix(netis))
-    print(neti.shape)
-    print(netis.shape)
-    # sys.exit(-1)
-    # print("netis.shape")
-    # print(netis[1:].shape)    
-    # print(neti)
+    
     return netis
 
-  def calculateResidualError(self,w0,neti):
-    preds = []
-    calc = neti.dot(w0.T)
+  def calcPred(self,w0,neti):
+    return neti.dot(w0.T)
 
-    # print(calc)
-    print("Erro percentual médio absoluto")
-    print(mean_absolute_percentage_error(self.y_train,calc))
+  def calculateResidualError(self,trueValues,pred):    
+    # print(np.matrix(trueValues).T)
+    # trueValues = Padronizar.desnormalizarLinear(pd.DataFrame(np.matrix(trueValues).T), self.listMaxY, self.listMinY, 0.1, 0.9)
+    # print(trueValues)
+    # pred = Padronizar.desnormalizarLinear(pd.DataFrame(np.matrix(pred)), self.listMaxY, self.listMinY, 0.1, 0.9)
+    # print(pred)
+    # print("Residual Error")
+    mape = mean_absolute_percentage_error(trueValues,pred)
+    self.mapeArray.append(mape)
+    print("mean_absolute_percentage_error")
+    print(mape)
+    print("mean_squared_error")
+    mse = mean_squared_error(trueValues,pred)
+    self.residualError.append(mse)
+    print(mse)
+    
     print("r2_score")
-    print(r2_score(self.y_train,calc))
-  
+    print(r2_score(trueValues,pred))
+
   def saveModel(self):
     print("salvar o modelo")

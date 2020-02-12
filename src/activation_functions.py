@@ -8,6 +8,9 @@ def tanh(x, derivative=False):
 	return np.tanh(x) if not derivative \
 					  else 1 - x * x
 
+def linear(x):
+    return x
+
 def relu(x, derivate = False):
     if not derivate:
         output = np.copy(x)
@@ -24,3 +27,4 @@ func_dict = {}
 func_dict['sigmoid'] = sigmoid
 func_dict['tanh'] = tanh
 func_dict['relu'] = relu
+func_dict['linear'] = linear
