@@ -2,7 +2,6 @@ import sys, os
 import numpy as np
 import pandas as pd
 import pickle
-from activation_functions import *
 sys.path.append(
 	os.path.join(
 		os.path.dirname(__file__), 
@@ -10,6 +9,7 @@ sys.path.append(
 		'utils'
 	)
 )
+from activation_functions import *
 from util import *
 from DataHandler import *
 import Padronizar
@@ -22,26 +22,30 @@ from sklearn.preprocessing   import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn                 import preprocessing
 
+class Model(object):
+  def __init__(self,wi,wo):
+    self.wi = wi
+    self.wh = wo
+
 class Cascade(object):
 
   def __init__(self, numMaxHiddenNodes = 800000):
     self.numMaxHiddenNodes = numMaxHiddenNodes
     self.ensemble = {}
     self.weightsArray = {}
+    
+    # ERROR ARRAYS
     self.residualError = []
+    self.residualErrorTest = []
     self.mapeArray = []
+    self.mapeArrayTest = []
 
     self.X_train=[]
     self.X_test=[]
     self.y_train=[]
     self.y_test=[]
     self.menor = 100000000
-    # self.dataNX=[]
-    # self.listMin=[]
-    # self.listMax=[]    
-    # self.dataNY=[]
-    # self.listMinY=[]
-    # self.listMaxY=[]
+    
     
   def load_and_preprocess_data(self):
     # TESTE COM A BASE airlines 2
@@ -50,8 +54,9 @@ class Cascade(object):
     self.X_train, self.y_train, val_set, val_target, self.X_test, self.y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, 12, 60, 20,20)
 
     y = [[]]
-    x = np.concatenate( ((self.X_train),(self.X_test)) ) 
-    y = np.matrix( np.concatenate( (np.array(self.y_train),np.array(self.y_test)) ))
+    x = np.concatenate( (self.X_train,self.X_test) )   
+
+    y = np.matrix( np.concatenate( (np.array(self.y_train),np.array(self.y_test)) ))   
     data = np.concatenate((x, y.T), axis=1)
     x, y = Padronizar.dividir(data, 12, 1)
 
@@ -65,12 +70,16 @@ class Cascade(object):
     self.dataNY, self.listMinY, self.listMaxY = Padronizar.normalizarLinear(y, 0.1, 0.9)
     # self.scalerX,self.scalerY, self.dataNormalizadoX, self.dataNormalizadoY = Padronizar.normalizar(x,y)
     self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.dataNX, self.dataNY, train_size = 0.8, test_size  = 0.2)
-    self.X_train = addBias(self.X_train.values)
+    self.X_test, self.X_val, self.y_test, self.y_val = train_test_split(self.X_test, self.y_test, train_size = 0.5, test_size  = 0.5)
     
+    self.X_train = addBias(self.X_train.values)    
+    self.X_val  = addBias(self.X_val.values)
     self.X_test  = addBias(self.X_test.values)
+    
     # WE WILL USE ONLY THE FIRST COLUMN 														
     self.y_train = self.y_train[self.y_train.columns[0]].values
     self.y_test = self.y_test[self.y_test.columns[0]].values
+    self.y_val = self.y_val[self.y_val.columns[0]].values
 
   def init_weights(self,xcol):    
     return (np.random.rand(xcol,1))
@@ -113,16 +122,11 @@ class Cascade(object):
     # print(pred)
     # print("Residual Error")
     mape = mean_absolute_percentage_error(trueValues,pred)
-    self.mapeArray.append(mape)
-    print("mean_absolute_percentage_error")
-    print(mape)
-    print("mean_squared_error")
-    mse = mean_squared_error(trueValues,pred)
-    self.residualError.append(mse)
-    print(mse)
     
-    print("r2_score")
-    print(r2_score(trueValues,pred))
-
-  def saveModel(self):
-    print("salvar o modelo")
+    mse = mean_squared_error(trueValues,pred)
+    
+    return mse,mape
+  
+  def saveModel(self,model,position):
+    self.ensemble[position] = model
+    

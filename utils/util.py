@@ -6,7 +6,10 @@ def add_1(arr):
     return np.append(arr,1)
 def addBias(matrix):#this function adds the value 1, at the last position in each array from matrix
     
-    bias = np.ones((matrix.__len__(),1))
-    # return np.array(list(map(add_1, matrix)))
-    return np.concatenate((matrix,bias),axis=1)
+  bias = np.ones((matrix.__len__(),1))
+  # return np.array(list(map(add_1, matrix)))
+  return np.concatenate((matrix,bias),axis=1)
+
+def roundNumber(number):
+  return round(number,4)
     

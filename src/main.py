@@ -1,6 +1,6 @@
 import sys, os
 import numpy as np
-import cascade
+from cascade import *
 from elm import *
 from activation_functions import * 
 
@@ -58,7 +58,7 @@ def elmExecute():
     print(r2_score(y_train,pred))
 
 def cascadeExecute():
-    num_hidden_nodes = 100
+    num_hidden_nodes = 50
     hiddennodes = list(range(num_hidden_nodes))
     neti = np.zeros((num_hidden_nodes,1))
     cascade: Cascade = Cascade(num_hidden_nodes)
@@ -69,24 +69,56 @@ def cascadeExecute():
         elm = ELM(1,cascade.X_train,cascade.y_train)
         netInv = elm.pinv(neti)
         w0 = elm.getW0(netInv)
+        model:Model = Model(cascade.weightsArray.copy(),w0)
+        cascade.saveModel(model,i)
+        
         predTraining = cascade.calcPred(w0,neti)
-        # print("Training")
-        # cascade.calculateResidualError(cascade.y_train, predTraining)
-        print("Test")
-        netiTest = cascade.forward(cascade.weightsArray,cascade.X_test)
-        predTest = cascade.calcPred(w0,netiTest)
-        cascade.calculateResidualError(cascade.y_test, predTest)
-        print()
+        
+        print("Validation")
+        netiVal = cascade.forward(cascade.weightsArray,cascade.X_val)
+        predVal = cascade.calcPred(w0,netiVal)
+        
+        mse,mape = cascade.calculateResidualError(cascade.y_val, predVal)
+        cascade.mapeArray.append(mape)
+        cascade.residualError.append(mse)
+        
+        printErrors(mape,mse)
+        
     y = list(range(num_hidden_nodes))
     # print(y)
-    # Plot the data
-    plt.plot(y, cascade.residualError, label='MSE')
-
+    print("Teste")
+    for i, model in cascade.ensemble.items():
+       
+        netiTeste = cascade.forward(model.wi,cascade.X_test)
+        predTeste = cascade.calcPred(model.wh,netiTeste)
+        mse,mape  = cascade.calculateResidualError(cascade.y_test, predTeste)
+        cascade.mapeArrayTest.append(mape)
+        cascade.residualErrorTest.append(mse)
+        printErrors(mape,mse)
+    
+    
+    df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': cascade.residualError, 'y2': cascade.residualErrorTest})
+        
+    plt.plot( 'x', 'y1', data=df, marker='o', markerfacecolor='grey', markersize=12, color='grey', linewidth=4,label='Validação')
+    plt.plot( 'x', 'y2', data=df, marker='', markerfacecolor='black', markersize=12, color='black', linewidth=4,label='Teste')
+    
     # Add a legend
     plt.legend()
-
-    # Show the plot
     plt.show()
+    # Plot the data
+    # plt.plot(y, cascade.residualError, label='MSE')
+
+    # # Add a legend
+    # plt.legend()
+    
+    # plt.savefig('200 hiddeunits.png')
+
+def printErrors(mape,mse):
+    print("mean_absolute_percentage_error")
+    print(mape)
+    print("mean_squared_error")
+    print(mse)
+    print()
 
 if __name__ == '__main__':
     cascadeExecute()
