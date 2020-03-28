@@ -60,41 +60,12 @@ def elmExecute():
 def cascadeExecute():
     num_hidden_nodes = 50
     hiddennodes = list(range(num_hidden_nodes))
-    neti = np.zeros((num_hidden_nodes,1))
+    # neti = np.zeros((num_hidden_nodes,1))
     cascade: Cascade = Cascade(num_hidden_nodes)
     cascade.load_and_preprocess_data()
-    for i in hiddennodes:
-        print("Node: ",i+1)
-        neti= cascade.insertHiddenUnit(i)
-        elm = ELM(1,cascade.X_train,cascade.y_train)
-        netInv = elm.pinv(neti)
-        w0 = elm.getW0(netInv)
-        model:Model = Model(cascade.weightsArray.copy(),w0)
-        cascade.saveModel(model,i)
-        
-        predTraining = cascade.calcPred(w0,neti)
-        
-        print("Validation")
-        netiVal = cascade.forward(cascade.weightsArray,cascade.X_val)
-        predVal = cascade.calcPred(w0,netiVal)
-        
-        mse,mape = cascade.calculateResidualError(cascade.y_val, predVal)
-        cascade.mapeArray.append(mape)
-        cascade.residualError.append(mse)
-        
-        printErrors(mape,mse)
-        
-    y = list(range(num_hidden_nodes))
-    # print(y)
-    print("Teste")
-    for i, model in cascade.ensemble.items():
-       
-        netiTeste = cascade.forward(model.wi,cascade.X_test)
-        predTeste = cascade.calcPred(model.wh,netiTeste)
-        mse,mape  = cascade.calculateResidualError(cascade.y_test, predTeste)
-        cascade.mapeArrayTest.append(mape)
-        cascade.residualErrorTest.append(mse)
-        printErrors(mape,mse)
+    cascade.fit(cascade.X_train,cascade.y_train)
+           
+    cascade.predict(cascade.X_test,cascade.y_test)
     
     
     df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': cascade.residualError, 'y2': cascade.residualErrorTest})
@@ -112,13 +83,6 @@ def cascadeExecute():
     # plt.legend()
     
     # plt.savefig('200 hiddeunits.png')
-
-def printErrors(mape,mse):
-    print("mean_absolute_percentage_error")
-    print(mape)
-    print("mean_squared_error")
-    print(mse)
-    print()
 
 if __name__ == '__main__':
     cascadeExecute()

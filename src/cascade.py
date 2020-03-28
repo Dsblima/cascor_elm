@@ -1,6 +1,7 @@
 import sys, os
 import numpy as np
 import pandas as pd
+from elm import *
 import pickle
 sys.path.append(
 	os.path.join(
@@ -130,3 +131,40 @@ class Cascade(object):
   def saveModel(self,model,position):
     self.ensemble[position] = model
     
+  def fit(self, train_set, train_target):
+    print("fit")
+    neti = np.zeros((self.numMaxHiddenNodes,1))
+    for i in list(range(self.numMaxHiddenNodes)):
+        print("Node: ",i+1)
+        neti= self.insertHiddenUnit(i)
+        elm = ELM(1,self.X_train,self.y_train)
+        netInv = elm.pinv(neti)
+        w0 = elm.getW0(netInv)
+        model:Model = Model(self.weightsArray.copy(),w0)
+        self.saveModel(model,i)
+        
+        predTraining = self.calcPred(w0,neti)
+        
+        print("Validation")
+        netiVal = self.forward(self.weightsArray,self.X_val)
+        predVal = self.calcPred(w0,netiVal)
+        
+        mse,mape = self.calculateResidualError(self.y_val, predVal)
+        self.mapeArray.append(mape)
+        self.residualError.append(mse)
+        
+        printErrors(mape,mse)
+    
+    
+  def predict(self,input, target):
+    print("predict")  
+    for i, model in self.ensemble.items():
+       
+      netiTeste = self.forward(model.wi,input)
+      predTeste = self.calcPred(model.wh,netiTeste)
+      mse,mape  = self.calculateResidualError(target, predTeste)
+      self.mapeArrayTest.append(mape)
+      self.residualErrorTest.append(mse)
+      printErrors(mape,mse)
+      
+    return predTeste
