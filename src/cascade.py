@@ -33,8 +33,8 @@ class Cascade(object):
     self.weightsArray = {}
     
     # ERROR ARRAYS
-    self.residualError = []
-    self.residualErrorTest = []
+    self.mseArray = []
+    self.mseArrayTest = []
     self.mapeArray = []
     self.mapeArrayTest = []
 
@@ -77,7 +77,7 @@ class Cascade(object):
     return netis
 
   def calcPred(self,w0,neti):
-    return neti.dot(w0.T)  
+    return np.array(neti.dot(w0.T)).T[0]  
   
   def saveModel(self,model,position):
     self.ensemble[position] = model
@@ -99,7 +99,7 @@ class Cascade(object):
         netiVal = self.forward(self.weightsArray,self.X_val)
         predVal = self.calcPred(w0,netiVal)
         
-        mse,mape = calculateResidualError(self.y_val, predVal)
+        mape, mse, rmse = calculateResidualError(self.y_val, predVal)
         
         if mse < self.minimumError:
           self.optimalWi = self.weightsArray.copy()
@@ -107,7 +107,7 @@ class Cascade(object):
           self.minimumError = mse
         
         self.mapeArray.append(mape)
-        self.residualError.append(mse)                    
+        self.mseArray.append(mse)                    
     
   def predict(self,input):
       

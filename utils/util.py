@@ -5,7 +5,9 @@ from sklearn.metrics import mean_squared_error
 import Arquivo
 from DataHandler import *
 import Padronizar
+import matplotlib as mpl
 from sklearn.model_selection import train_test_split
+from math import sqrt
 
 def add_1(arr):
     return np.append(arr,1)
@@ -32,16 +34,16 @@ def mean_absolute_percentage_error(y_true, y_pred):
   
 def load_and_preprocess_data(baseName,dimension):
     
-    data = Arquivo.ler('../data/'+baseName)
+    data = Arquivo.ler('../data/'+baseName+'.txt')
     dh:DataHandler = DataHandler(data, dimension, 60, 20,20)
-    X_train, y_train, val_set, val_target, X_test, y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, 12, 60, 20,20)
+    X_train, y_train, val_set, val_target, X_test, y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, dimension, 60, 20,20)
 
     y = [[]]
     x = np.concatenate( (X_train,X_test) )   
 
     y = np.matrix( np.concatenate( (np.array(y_train),np.array(y_test)) ))   
     data = np.concatenate((x, y.T), axis=1)
-    x, y = Padronizar.dividir(data, 12, 1)
+    x, y = Padronizar.dividir(data, dimension, 1)
 
 
     # data = Arquivo.ler('../data/projeto base completa.csv')
@@ -75,25 +77,34 @@ def calculateResidualError(trueValues,pred):
     # print("Residual Error")
     mape = mean_absolute_percentage_error(trueValues,pred)
     
-    mse = mean_squared_error(trueValues,pred)    
+    mse = mean_squared_error(trueValues,pred)
     
-    return mape, mse
-
-def plot():
-  print("plot")
-  # df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': cascade.residualError, 'y2': cascade.residualErrorTest})
+    rmse = sqrt(mse)
+    
+    return mape, mse, rmse
+def plot(base="",model="",num_hidden_nodes=50,y1=[],y2=[],y3=[],label1="",label2="",label3="",show=False, save=True):
+  
+  df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': y1})
         
-  # plt.plot( 'x', 'y1', data=df, marker='o', markerfacecolor='grey', markersize=12, color='grey', linewidth=4,label='Validação')
-  # plt.plot( 'x', 'y2', data=df, marker='', markerfacecolor='black', markersize=12, color='black', linewidth=4,label='Teste')
+  plt.plot( 'x', 'y1', data=df, marker='', markerfacecolor='grey', markersize=12, color='grey', linewidth=4,label=label1)
   
-  # # Add a legend
-  # plt.legend()
-  # plt.show()
-  # Plot the data
-  # plt.plot(y, cascade.residualError, label='MSE')
-
-  # # Add a legend
-  # plt.legend()
+  if len(y2)!=0:
+    df['y2'] = y2
+    plt.plot( 'x', 'y2', data=df, marker='/', markerfacecolor='black', markersize=12, color='black', linewidth=4,label=label2)
   
-  # plt.savefig('200 hiddeunits.png')  
+  if len(y3)!=0:
+    df['y3'] = y3
+    plt.plot( 'x', 'y3', data=df, marker='*', markerfacecolor='red', markersize=12, color='red', linewidth=4,label=label3)
+  
+  fig = plt.gcf()  
+  fig.set_size_inches(16.5, 10.5, forward=True)
+  
+  # Add a legend
+  plt.legend(prop={"size":20})
+  
+  if show:
+    plt.show()    
+  if save:
+    plt.savefig(base+' '+model+'.png')
+  plt.close()  
     

@@ -19,35 +19,49 @@ def elmExecute(baseName,dimension):
     X_train, y_train, X_val, y_val, X_test, y_test = load_and_preprocess_data(baseName,dimension)
 
     # Instance and run ELM
-    elm = ELM(500,)
+    mseArray = []
+    # num_hidden_nodes_array = list(range(1,101,1))
+    # for num_hidden_nodes in num_hidden_nodes_array:
+    elm = ELM(80,)
     elm.fit(X_train,y_train)
         
     pred =elm.pred(X_test)
-   
-    mape, mse  = calculateResidualError(y_test,pred)      
+
+    mape, mse, rmse  = calculateResidualError(y_test,pred)      
+    # mseArray.append(mse)
+    del elm
+    # print(mseArray)    
+    # plot(baseName,"ELM",100,mseArray,[],[],"MSE",'','',False,True)    
     
-    # printErrors(mape,mse)
     return mape,mse    
 
 def cascadeExecute(baseName,dimension):
-    num_hidden_nodes = 100        
+    num_hidden_nodes = 40        
     cascade: Cascade = Cascade(num_hidden_nodes)
     cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(baseName,dimension)
     cascade.fit(cascade.X_train,cascade.y_train)
-           
-    predTeste = cascade.predict(cascade.X_test)
-    mape, mse  = calculateResidualError(cascade.y_test, predTeste)
-    cascade.mapeArrayTest.append(mape)
-    cascade.residualErrorTest.append(mse)
     
-    # printErrors(mape,mse)        
+    # plot(baseName,num_hidden_nodes,cascade.mapeArray,[],[],"MAPE",'','',True)
+    
+    predTeste = cascade.predict(cascade.X_test)
+    
+    mape, mse,rmse  = calculateResidualError(cascade.y_test, predTeste)
+    cascade.mapeArrayTest.append(mape)
+    cascade.mseArrayTest.append(mse)
+    
+    del cascade
+           
     return mape,mse
+
 
 if __name__ == '__main__':    
     
-    bases = ['airlines2.txt','Minimum Daily Temperatures Dataset.txt','Monthly Sunspot Dataset.txt','Daily Female Births Dataset.txt']
-    dimensions = [12,12,11,12]
-    for base,dimension in zip(bases,dimensions):
+    bases = ["airlines2", "Monthly Sunspot Dataset", "Minimum Daily Temperatures Dataset", "Daily Female Births Dataset",'Colorado River','Eletric','Gas','Lake Erie','Pollution','redwine']
+    dimensions = [12,11,12,12,12,12,12,12,12,12]
+    
+    # bases = ["Monthly Sunspot Dataset"]
+    # dimensions = [11]    
+    for base, dimension in zip(bases, dimensions):
         mapeListCascade = []
         mseListCascade = []
         mapeListELM = []
@@ -57,17 +71,16 @@ if __name__ == '__main__':
             mapeListCascade.append(mape)
             mseListCascade.append(mse)
                     
-        for i in range(1,31):
-            mape,mse = elmExecute(base,dimension)
+            mape,mse = elmExecute(base, dimension)
             mapeListELM.append(mape)
-            mseListELM.append(mse)
+            mseListELM.append(mse)     
         
         print(base)   
         print("cascade")
         print(np.mean(mapeListCascade))   
         print(np.mean(mseListCascade))
         print("elm")   
-        print(np.mean(mapeListELM))   
+        print(np.mean(mapeListELM))    
         print(np.mean(mseListELM))
         print()   
-    
+    	
