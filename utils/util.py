@@ -85,7 +85,14 @@ def calculateResidualError(trueValues,pred):
 def plot(base="",model="",num_hidden_nodes=50,y1=[],y2=[],y3=[],label1="",label2="",label3="",show=False, save=True):
   
   df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': y1})
-        
+  
+  fig = plt.figure()
+  fig.subplots_adjust(top=0.8)
+  ax1 = fig.add_subplot(211)
+  ax1.set_ylabel('MSE')
+  ax1.set_xlabel('Num hidden nodes')
+  ax1.set_title(base)  
+  
   plt.plot( 'x', 'y1', data=df, marker='', markerfacecolor='grey', markersize=12, color='grey', linewidth=4,label=label1)
   
   if len(y2)!=0:

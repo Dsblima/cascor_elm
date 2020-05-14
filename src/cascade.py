@@ -31,6 +31,7 @@ class Cascade(object):
     self.numMaxHiddenNodes = numMaxHiddenNodes
     self.ensemble = {}
     self.weightsArray = {}
+    self.candidatesWeightsArray = {}
     
     # ERROR ARRAYS
     self.mseArray = []
@@ -47,10 +48,12 @@ class Cascade(object):
     self.optimalWo = []    
       
   def init_weights(self,xcol):    
-    return (np.random.rand(xcol,1))
+    return np.random.rand(xcol,1)
 
   def insertHiddenUnit(self,i):
     numCol = self.X_train[0].__len__()+i
+    
+    self.generateCandidates(50,numCol)
     
     wh = self.init_weights(numCol)
 
@@ -58,6 +61,16 @@ class Cascade(object):
     
     return self.forward(self.weightsArray,self.X_train)
 
+  def generateCandidates(self,numCandidates,numColumns):
+    for candidate in list(range(numCandidates)):
+      self.candidatesWeightsArray[candidate] = self.init_weights(numCol)
+  
+  def selectBestCandidate(self):
+    return []
+    
+  def calculateCorrelation(self):
+    return 0    
+    
   def forward(self,wh,input):
     netis = [[]]    
     for node, weights in wh.items():
