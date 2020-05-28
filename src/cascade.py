@@ -54,9 +54,10 @@ class Cascade(object):
     numCol = self.X_train[0].__len__()+i
     
     self.generateCandidates(50,numCol)
-    
-    wh = self.init_weights(numCol)
+    self.trainingCandidates(i)
+    wh = self.selectBestCandidate()
 
+    # wh = self.init_weights(numCol)
     self.weightsArray[i] = wh
     
     return self.forward(self.weightsArray,self.X_train)
@@ -65,11 +66,20 @@ class Cascade(object):
     for candidate in list(range(numCandidates)):
       self.candidatesWeightsArray[candidate] = self.init_weights(numCol)
   
-  def selectBestCandidate(self):
-    return []
+  def trainingCandidates(self,pos):
+    weightsToTrain = self.weightsArray.copy()
     
+    for candidateWeight in self.candidatesWeightsArray:
+      weightsToTrain[pos] = candidateWeight
+      neti=self.forward(weightsToTrain,self.X_train)
+      netInv = np.linalg.pinv(neti)
+      w0 = np.dot(netInv,self.y_train)
+         
   def calculateCorrelation(self):
-    return 0    
+    return 0 
+  
+  def selectBestCandidate(self):
+    return []         
     
   def forward(self,wh,input):
     netis = [[]]    
