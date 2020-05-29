@@ -51,10 +51,10 @@ def load_and_preprocess_data(baseName,dimension):
     # print("y")
     # print(y[y.columns[0]])
     # minmaxscaler = MinMaxScaler(feature_range=(0,1))
-    dataNX, listMin,  listMax  = Padronizar.normalizarLinear(x, 0.1, 0.9)
-    dataNY, listMinY, listMaxY = Padronizar.normalizarLinear(y, 0.1, 0.9)
+    dataNX, listMin,  listMax  = Padronizar.normalizarLinear(x, -1, 1)
+    dataNY, listMinY, listMaxY = Padronizar.normalizarLinear(y, -1, 1)
     # scalerX,scalerY, dataNormalizadoX, dataNormalizadoY = Padronizar.normalizar(x,y)
-    X_train, X_test, y_train, y_test = train_test_split(dataNX, dataNY, train_size = 0.8, test_size  = 0.2)
+    X_train, X_test, y_train, y_test = train_test_split(dataNX, dataNY, train_size = 0.6, test_size  = 0.4)
     X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, train_size = 0.5, test_size  = 0.5)
     
     X_train = addBias(X_train.values)    
@@ -82,36 +82,5 @@ def calculateResidualError(trueValues,pred):
     rmse = sqrt(mse)
     
     return mape, mse, rmse
-def plot(base="",model="",num_hidden_nodes=50,y1=[],y2=[],y3=[],label1="",label2="",label3="",show=False, save=True):
-  
-  df=pd.DataFrame({'x': range(1,num_hidden_nodes+1), 'y1': y1})
-  
-  fig = plt.figure()
-  fig.subplots_adjust(top=0.8)
-  ax1 = fig.add_subplot(211)
-  ax1.set_ylabel('MSE')
-  ax1.set_xlabel('Num hidden nodes')
-  ax1.set_title(base)  
-  
-  plt.plot( 'x', 'y1', data=df, marker='', markerfacecolor='grey', markersize=12, color='grey', linewidth=4,label=label1)
-  
-  if len(y2)!=0:
-    df['y2'] = y2
-    plt.plot( 'x', 'y2', data=df, marker='/', markerfacecolor='black', markersize=12, color='black', linewidth=4,label=label2)
-  
-  if len(y3)!=0:
-    df['y3'] = y3
-    plt.plot( 'x', 'y3', data=df, marker='*', markerfacecolor='red', markersize=12, color='red', linewidth=4,label=label3)
-  
-  fig = plt.gcf()  
-  fig.set_size_inches(16.5, 10.5, forward=True)
-  
-  # Add a legend
-  plt.legend(prop={"size":20})
-  
-  if show:
-    plt.show()    
-  if save:
-    plt.savefig(base+' '+model+'.png')
-  plt.close()  
+
     

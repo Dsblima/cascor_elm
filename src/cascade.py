@@ -53,7 +53,7 @@ class Cascade(object):
   def insertHiddenUnit(self,i):
     numCol = self.X_train[0].__len__()+i
     
-    self.generateCandidates(50,numCol)
+    # self.generateCandidates(50,numCol)
     
     wh = self.init_weights(numCol)
 

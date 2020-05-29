@@ -2,7 +2,6 @@ import sys, os
 import numpy as np
 from cascade import *
 from elm import *
-from activation_functions import * 
 
 sys.path.append(
 	os.path.join(
@@ -11,8 +10,12 @@ sys.path.append(
 		'utils'
 	)
 )
+from activation_functions import * 
 from util import *
-from cascade import *
+from Chart import *
+from util import *
+from activation_functions import *
+from JsonManager import *
 
 def elmExecute(baseName,dimension):
     
@@ -35,52 +38,144 @@ def elmExecute(baseName,dimension):
     
     return mape,mse    
 
-def cascadeExecute(baseName,dimension):
+def executeCascade(bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model):
     # num_hidden_nodes = 40
-    mseArray = []
-    num_hidden_nodes_array = list(range(1,101,1))
-    for num_hidden_nodes in num_hidden_nodes_array:        
-        cascade: Cascade = Cascade(num_hidden_nodes)
-        cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(baseName,dimension)
-        cascade.fit(cascade.X_train,cascade.y_train)        
+    # mseArray = []
+    # num_hidden_nodes_array = list(range(1,101,1))
+    for base, dimension in zip(bases, dimensions):
+        dictToSave = {}
         
-        predTeste = cascade.predict(cascade.X_test)
+        print(base)
+        mseTestByNumHiddenNodesList = []
+        mapeTestByNumHiddenNodesList = []
+        mseValByNumHiddenNodesList = []
+        mapeValByNumHiddenNodesList = []
+        predValList = []
+        targetValList = []
+        predTestList = []
+        targetTestList = []
+        listNodes = list(range(minHiddenNodes, maxHiddenNodes+1))
         
-        mape, mse,rmse  = calculateResidualError(cascade.y_test, predTeste)
-        cascade.mapeArrayTest.append(mape)
-        mseArray.append(mse)                
+        for num_hidden_nodes in listNodes:
+            mseTestListCascade = []
+            mapeTestListCascade = []
+            mseValListCascade = []
+            mapeValListCascade = []
+                    
+            for i in list(range(1, iterations+1)):        
+                cascade: Cascade = Cascade(num_hidden_nodes)
+                cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(base,dimension)
+                cascade.fit(cascade.X_train,cascade.y_train)        
+                
+                predTest = cascade.predict(cascade.X_test)
+                mapeTest, mseTest,rmseTest  = calculateResidualError(cascade.y_test, predTest)
+                predVal = cascade.predict(cascade.X_val)
+                mapeVal, mseVal,rmseVal  = calculateResidualError(cascade.y_val, predVal)
+                
+                # cascade.mapeArrayTest.append(mape)
+                # mseArray.append(mse)
+                
+                mapeTestListCascade.append(mapeTest)
+                mseTestListCascade.append(mseTest)
+                mapeValListCascade.append(mapeVal)
+                mseValListCascade.append(mseVal)
+                
+                predValList.append(predVal)
+                targetValList.append(cascade.y_val)
+                predTestList.append(predTest)
+                targetTestList.append(cascade.y_test)
+                
+            mseTestByNumHiddenNodesList.append(np.mean(mseTestListCascade))
+            mapeTestByNumHiddenNodesList.append(np.mean(mapeTestListCascade))
+            mseValByNumHiddenNodesList.append(np.mean(mseValListCascade))
+            mapeValByNumHiddenNodesList.append(np.mean(mapeValListCascade))    
+        
+        dictToSave['model'] = model
+        dictToSave['activationFunction'] = 'sigmoid'
+        dictToSave['inputsize']  = dimension
+        dictToSave['executions'] = []
+        
+        for mapeValValue, mseValValue, mapeTestValue, mseTestValue, valPredValues, valTargetValues, testPredValues, testTargetValues, numHiddenNodes in zip( mapeValByNumHiddenNodesList, mseValByNumHiddenNodesList,mapeTestByNumHiddenNodesList, mseTestByNumHiddenNodesList,  predValList, targetValList, predTestList, targetTestList, listNodes ):
             
-    plot(baseName,"CASCADE",100,mseArray,[],[],"MSE",'','',False,True)        
-    return mape,mse
-
-
-if __name__ == '__main__':    
+            dictToSave['executions'].append(
+                {
+                    "numHiddenNodes":numHiddenNodes,
+                    "predVal":valPredValues.tolist(),
+                    "trueVal":valTargetValues.tolist(),
+                    "predTest":testPredValues.tolist(),
+                    "trueTest":testTargetValues.tolist(),
+                    "errors":[
+                        {
+                            "mapeVal":mapeValValue,
+                            "mseVal":mseValValue,
+                            "rmseVal":"0",
+                            "mapeTest":mapeTestValue,
+                            "mseTest":mseTestValue,
+                            "rmseTest":"0"
+                        }
+                    ]
+                }
+            )
+            
+        writeJsonFile(dictToSave, base)                    
+            
+    # plot(baseName,"CASCADE",100,mseArray,[],[],"MSE",'','',False,True)        
+    # return mape,mse
+def getErrors(dictToRead):
+    mapeValArray = []
+    mseValArray = []
+    mapeTestArray = []
+    mseTestArray = []
+    for execution in dictToRead['executions']:
+        
+        for error in execution['errors']:
+            mapeValArray.append(error['mapeVal'])
+            mseValArray.append(error['mseVal'])
+            mapeTestArray.append(error['mapeTest'])
+            mseTestArray.append(error['mseTest'])
     
+    return mapeValArray, mseValArray, mapeTestArray, mseTestArray
+
+def getPredAndTrueValues(dictToRead, node):
+    predVal = []
+    trueVal = []
+    predTest = []
+    trueTest = []
+    for execution in dictToRead['executions']:
+        if execution['numHiddenNodes'] == node:
+            predVal = execution['predVal']
+            trueVal = execution['trueVal']
+            predTest = execution['predTest']
+            trueTest = execution['trueTest']
+
+    return predVal, trueVal, predTest, trueTest
+
+
+if __name__ == '__main__':
     bases = ["airlines2", "Monthly Sunspot Dataset", "Minimum Daily Temperatures Dataset", "Daily Female Births Dataset",'Colorado River','Eletric','Gas','Lake Erie','Pollution','redwine']
     dimensions = [12,11,12,12,12,12,12,12,12,12]
+    # bases = ['Pollution']
+    # dimensions = [12]
     
-    # bases = ["airlines2"]
-    # dimensions = [12]    
-    for base, dimension in zip(bases, dimensions):
-        mapeListCascade = []
-        mseListCascade = []
-        mapeListELM = []
-        mseListELM = []
-        for i in range(1,2):        
-            mape,mse = cascadeExecute(base,dimension)
-            mapeListCascade.append(mape)
-            mseListCascade.append(mse)
-                    
-            # mape,mse = elmExecute(base, dimension)
-            # mapeListELM.append(mape)
-            # mseListELM.append(mse)     
-        
-        print(base)   
-        print("cascade")
-        print(np.mean(mapeListCascade))   
-        print(np.mean(mseListCascade))
-        # print("elm")   
-        # print(np.mean(mapeListELM))    
-        # print(np.mean(mseListELM))
-        # print()   
+    upperLimit = 1
+    lowerLimit = -1
+    maxHiddenNodes = 70
+    minHiddenNodes = 1
+    iterations = 1    
+    model = "Arima Cascade"
+    saveChart = False
+    showChart = True
+    # executeCascade(bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)
+    
+    chart:Chart = Chart()
+    
+    base = 'airlines2'
+    filename = '../data/simulations/2020-05-28/'+base
+    
+    loadedDict = readJsonFile(filename+'.json')
+    mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
+    predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
+    # chart.plotValidationAndTest(base, "Arima Cascade", maxHiddenNodes, mseValArray,
+    #                           mseTestArray, "Validation", "Test", showChart, saveChart) 
+    chart.plotTable(mseValArray,filename+'MSEVal.csv')
     	
