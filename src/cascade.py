@@ -27,8 +27,9 @@ class Model(object):
 
 class Cascade(object):
 
-  def __init__(self, numMaxHiddenNodes = 800000):
+  def __init__(self, numMaxHiddenNodes = 800000,lambdaReg = 10000 ):
     self.numMaxHiddenNodes = numMaxHiddenNodes
+    self.lambdaReg = lambdaReg
     self.ensemble = {}
     self.weightsArray = {}
     self.candidatesWeightsArray = {}
@@ -69,7 +70,14 @@ class Cascade(object):
     return []
     
   def calculateCorrelation(self):
-    return 0    
+    return 0
+  
+  def regularization(self, neti, y):
+       netiT = neti.T
+       prod = neti.dot(netiT)
+       inv = np.linalg.pinv(1/self.lambdaReg + prod)
+       prodInv = netiT.dot(inv) 
+       return prodInv.dot(y)
     
   def forward(self,wh,input):
     netis = [[]]    
@@ -103,7 +111,15 @@ class Cascade(object):
         neti= self.insertHiddenUnit(i)
         # elm = ELM(1,self.X_train,self.y_train)
         netInv = np.linalg.pinv(neti)
-        w0 = np.dot(netInv,self.y_train)
+        w02 = np.dot(netInv,self.y_train)
+        
+        w0 = self.regularization(neti,self.y_train)
+        
+        # print("w0 - whitout reg")
+        # print(w02)
+        # print("w0  - whit reg")
+        # print(w0)
+        
         model:Model = Model(self.weightsArray.copy(),w0.copy())
         self.saveModel(model,i)
         

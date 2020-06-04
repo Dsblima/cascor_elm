@@ -165,17 +165,17 @@ if __name__ == '__main__':
     model = "Arima Cascade"
     saveChart = False
     showChart = True
-    # executeCascade(bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)
+    executeCascade(bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)
     
     chart:Chart = Chart()
     
-    base = 'airlines2'
-    filename = '../data/simulations/2020-05-28/'+base
+    # base = 'Pollution'
+    # filename = '../data/simulations/2020-06-03/'+base
     
-    loadedDict = readJsonFile(filename+'.json')
-    mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
-    predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
+    # loadedDict = readJsonFile(filename+'.json')
+    # mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
+    # predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
     # chart.plotValidationAndTest(base, "Arima Cascade", maxHiddenNodes, mseValArray,
     #                           mseTestArray, "Validation", "Test", showChart, saveChart) 
-    chart.plotTable(mseValArray,filename+'MSEVal.csv')
+    # chart.plotTable(mseValArray,filename+'MSEVal.csv')
     	
