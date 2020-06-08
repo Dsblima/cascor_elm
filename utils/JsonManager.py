@@ -1,11 +1,10 @@
 import sys
 import os
 import json
-from datetime import date
 
-def writeJsonFile(dictToSave, base):
-    today = date.today()
-    path = '../data/simulations/'+str(today)
+def writeJsonFile(dictToSave, base, dateToday):
+    
+    path = '../data/simulations/'+str(dateToday)
     
     if not os.path.isdir(path):
         os.mkdir(path)

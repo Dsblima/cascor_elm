@@ -2,7 +2,7 @@ import sys, os
 import numpy as np
 from cascade import *
 from elm import *
-
+from datetime import date
 sys.path.append(
 	os.path.join(
 		os.path.dirname(__file__), 
@@ -38,7 +38,7 @@ def elmExecute(baseName,dimension):
     
     return mape,mse    
 
-def executeCascade(bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model):
+def executeCascade(today,bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model):
     # num_hidden_nodes = 40
     # mseArray = []
     # num_hidden_nodes_array = list(range(1,101,1))
@@ -57,6 +57,7 @@ def executeCascade(bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, min
         listNodes = list(range(minHiddenNodes, maxHiddenNodes+1))
         
         for num_hidden_nodes in listNodes:
+            print (base+' - '+str(num_hidden_nodes))
             mseTestListCascade = []
             mapeTestListCascade = []
             mseValListCascade = []
@@ -117,11 +118,12 @@ def executeCascade(bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, min
                 }
             )
             
-        writeJsonFile(dictToSave, base)                    
+        writeJsonFile(dictToSave, base, today)                    
             
     # plot(baseName,"CASCADE",100,mseArray,[],[],"MSE",'','',False,True)        
     # return mape,mse
 def getErrors(dictToRead):
+    
     mapeValArray = []
     mseValArray = []
     mapeTestArray = []
@@ -154,7 +156,7 @@ def getPredAndTrueValues(dictToRead, node):
 if __name__ == '__main__':
     bases = ["airlines2", "Monthly Sunspot Dataset", "Minimum Daily Temperatures Dataset", "Daily Female Births Dataset",'Colorado River','Eletric','Gas','Lake Erie','Pollution','redwine']
     dimensions = [12,11,12,12,12,12,12,12,12,12]
-    # bases = ['Pollution']
+    # bases = ['Minimum Daily Temperatures Dataset']
     # dimensions = [12]
     
     upperLimit = 1
@@ -163,19 +165,35 @@ if __name__ == '__main__':
     minHiddenNodes = 1
     iterations = 1    
     model = "Arima Cascade"
-    saveChart = False
-    showChart = True
-    executeCascade(bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)
+    saveChart = True
+    showChart = False
+    today = date.today()
+    # executeCascade(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
     
-    chart:Chart = Chart()
+    # # base     = 'Eletric'
+    dirReg   = '../data/simulations/2020-06-04/'
+    dirNReg  = '../data/simulations/2020-06-07/'
+    dirs = [dirReg, dirNReg]
+    title1 = " with lambda = 10000" 
+    title2 = " with lambda = 100000"
     
-    # base = 'Pollution'
-    # filename = '../data/simulations/2020-06-03/'+base
-    
-    # loadedDict = readJsonFile(filename+'.json')
-    # mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
-    # predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
-    # chart.plotValidationAndTest(base, "Arima Cascade", maxHiddenNodes, mseValArray,
-    #                           mseTestArray, "Validation", "Test", showChart, saveChart) 
+    for base in bases:
+        mseVal = []
+        mseTest = []
+        chart:Chart = Chart()
+        
+        for folder in dirs:
+        
+            fileName = folder+base
+        
+            loadedDict = readJsonFile(fileName+'.json')    
+            
+            mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
+            mseVal.append(mseValArray)
+            mseTest.append(mseTestArray)
+            # predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
+            
+        chart.plotValidationAndTest(base, "Cascade - elm", maxHiddenNodes, mseVal,
+                                mseTest, "Validation", "Test", title1, title2, showChart, saveChart) 
     # chart.plotTable(mseValArray,filename+'MSEVal.csv')
     	

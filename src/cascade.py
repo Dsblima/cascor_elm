@@ -27,7 +27,7 @@ class Model(object):
 
 class Cascade(object):
 
-  def __init__(self, numMaxHiddenNodes = 800000,lambdaReg = 10000 ):
+  def __init__(self, numMaxHiddenNodes = 800000,lambdaReg = 100000 ):
     self.numMaxHiddenNodes = numMaxHiddenNodes
     self.lambdaReg = lambdaReg
     self.ensemble = {}
