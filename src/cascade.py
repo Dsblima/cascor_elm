@@ -29,6 +29,7 @@ class Cascade(object):
 
   def __init__(self, numMaxHiddenNodes = 800000,lambdaReg = 100000 ):
     self.numMaxHiddenNodes = numMaxHiddenNodes
+    self.optimalNumHiddenNodes = numMaxHiddenNodes
     self.lambdaReg = lambdaReg
     self.ensemble = {}
     self.weightsArray = {}
@@ -134,6 +135,7 @@ class Cascade(object):
           self.optimalWi = self.weightsArray.copy()
           self.optimalWo = w0.copy()
           self.minimumError = mse
+          self.optimalNumHiddenNodes = i+1
         
         self.mapeArray.append(mape)
         self.mseArray.append(mse)                    

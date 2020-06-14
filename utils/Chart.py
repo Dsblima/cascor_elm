@@ -12,7 +12,7 @@ class Chart(object):
         self.subplot = 211
         self.fig = plt.figure()
     def plotValidationAndTest(self,base="", model="", num_hidden_nodes=50, valSet=[],
-                              testSet=[], label1="", label2="", title1="", title2="", show=False, save=True):
+                              testSet=[], label1="", label2="", title1="", title2="", show=False, save=True, folderToSave=''):
         
         self.fig.subplots_adjust(top=0.8)
         
@@ -32,7 +32,7 @@ class Chart(object):
         if show:
             plt.show()
         if save:
-            plt.savefig(base+' '+model+'.png')
+            plt.savefig(folderToSave+base+' '+model+'.png')
         plt.close()
 
     def plotSubChart(self,base="",num_hidden_nodes=50, valSet=[],testSet=[], label1="", 
