@@ -58,26 +58,50 @@ class Cascade(object):
     # self.generateCandidates(50,numCol)
     
     wh = self.init_weights(numCol)
-
     self.weightsArray[i] = wh
+    # self.weightsArray[i] = self.selectBestCandidate()
     
     return self.forward(self.weightsArray,self.X_train)
 
   def generateCandidates(self,numCandidates,numColumns):
     for candidate in list(range(numCandidates)):
-      self.candidatesWeightsArray[candidate] = self.init_weights(numCol)
+      self.candidatesWeightsArray[candidate] = self.init_weights(numColumns)
   
   def selectBestCandidate(self):
-    return []
+    best = self.trainCandidates()
+    return best
     
-  def calculateCorrelation(self):
+  def EvaluateCandidates(self):
     return 0
   
+  def trainCandidates(self):
+    smallestMSE = math.inf
+    bestCandidate = []
+    for candidate in self.candidatesWeightsArray:
+      weightsCopy = self.weightsArray.copy()
+      weightsCopy[len(weightsCopy)] = candidate
+      neti = self.forward(weightsCopy,self.X_train)
+      netInv = np.linalg.pinv(neti)
+      wo = np.dot(netInv,self.y_train)
+      pred = self.calcPred(wo,neti)
+      # print("pred.shape")
+      # print(pred.shape)
+      # print(self.y)
+      mape, mse, rmse = calculateResidualError(self.y_train, pred)
+      if mse < smallestMSE:
+        smallestMSE = mse
+        bestCandidate = candidate
+    
+    return bestCandidate    
+        
   def regularization(self, neti, y):
        netiT = neti.T
        prod = neti.dot(netiT)
-       inv = np.linalg.pinv(1/self.lambdaReg + prod)
+       I = np.zeros(prod.shape, int)
+       np.fill_diagonal(I, 1)
+       inv = np.linalg.pinv(1/self.lambdaReg*I + prod)
        prodInv = netiT.dot(inv) 
+     
        return prodInv.dot(y)
     
   def forward(self,wh,input):
@@ -115,12 +139,7 @@ class Cascade(object):
         w02 = np.dot(netInv,self.y_train)
         
         w0 = self.regularization(neti,self.y_train)
-        
-        # print("w0 - whitout reg")
-        # print(w02)
-        # print("w0  - whit reg")
-        # print(w0)
-        
+                
         model:Model = Model(self.weightsArray.copy(),w0.copy())
         self.saveModel(model,i)
         

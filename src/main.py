@@ -1,4 +1,5 @@
 import sys, os
+import csv
 import numpy as np
 from cascade import *
 from elm import *
@@ -10,33 +11,94 @@ sys.path.append(
 		'utils'
 	)
 )
-from activation_functions import * 
-from util import *
 from Chart import *
 from util import *
 from activation_functions import *
 from JsonManager import *
 
-def elmExecute(baseName,dimension):
-    
-    X_train, y_train, X_val, y_val, X_test, y_test = load_and_preprocess_data(baseName,dimension)
-
-    # Instance and run ELM
-    mseArray = []
-    num_hidden_nodes_array = list(range(1,101,1))
-    for num_hidden_nodes in num_hidden_nodes_array:
-        elm = ELM(num_hidden_nodes,)
-        elm.fit(X_train,y_train)
+def executeELM(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model):
+        
+    lambdaValues = [1, 10, 100, 1000, 10000, 100000]
+    for base, dimension in zip(bases, dimensions):
+        # for lambdaValue in lambdaValues:
+        # folderToSave = today+' lambda = '+ str(lambdaValue)
+        folderToSave = today+' ELM Construtivo'
+        dictToSave = {}
+        
+        print(base)
+        mseTestByNumHiddenNodesList = []
+        mapeTestByNumHiddenNodesList = []
+        mseValByNumHiddenNodesList = []
+        mapeValByNumHiddenNodesList = []
+        predValList = []
+        targetValList = []
+        predTestList = []
+        targetTestList = []
+        listNodes = list(range(minHiddenNodes, maxHiddenNodes+1))
+        
+        for num_hidden_nodes in listNodes:
+            print (base+' - '+str(num_hidden_nodes))
+            mseTestListELM = []
+            mapeTestListELM = []
+            mseValListELM = []
+            mapeValListELM = []
+                    
+            for i in list(range(1, iterations+1)):        
+                elm = ELM(num_hidden_nodes)
+                X_train, y_train, X_val, y_val, X_test, y_test = load_and_preprocess_data(base,dimension, lowerLimit, upperLimit)
+                elm.fit(X_train,y_train)        
+                
+                predTest = elm.pred(X_test)
+                mapeTest, mseTest,rmseTest  = calculateResidualError(y_test, predTest)
+                predVal = elm.pred(X_val)
+                mapeVal, mseVal,rmseVal  = calculateResidualError(y_val, predVal)
+                
+                # cascade.mapeArrayTest.append(mape)
+                # mseArray.append(mse)
+                
+                mapeTestListELM.append(mapeTest)
+                mseTestListELM.append(mseTest)
+                mapeValListELM.append(mapeVal)
+                mseValListELM.append(mseVal)
+                
+                predValList.append(predVal)
+                targetValList.append(y_val)
+                predTestList.append(predTest)
+                targetTestList.append(y_test)
+                
+            mseTestByNumHiddenNodesList.append(np.mean(mseTestListELM))
+            mapeTestByNumHiddenNodesList.append(np.mean(mapeTestListELM))
+            mseValByNumHiddenNodesList.append(np.mean(mseValListELM))
+            mapeValByNumHiddenNodesList.append(np.mean(mapeValListELM))    
+        
+        dictToSave['model'] = model
+        dictToSave['activationFunction'] = 'sigmoid'
+        dictToSave['inputsize']  = dimension
+        dictToSave['executions'] = []
+        
+        for mapeValValue, mseValValue, mapeTestValue, mseTestValue, valPredValues, valTargetValues, testPredValues, testTargetValues, numHiddenNodes in zip( mapeValByNumHiddenNodesList, mseValByNumHiddenNodesList,mapeTestByNumHiddenNodesList, mseTestByNumHiddenNodesList,  predValList, targetValList, predTestList, targetTestList, listNodes ):
             
-        pred =elm.pred(X_test)
-
-        mape, mse, rmse  = calculateResidualError(y_test,pred)      
-        mseArray.append(mse)
-        del elm
-    # print(mseArray)    
-    plot(baseName,"ELM",100,mseArray,[],[],"MSE",'','',False,True)    
-    
-    return mape,mse    
+            dictToSave['executions'].append(
+                {
+                    "numHiddenNodes":numHiddenNodes,
+                    "predVal":valPredValues.tolist(),
+                    "trueVal":valTargetValues.tolist(),
+                    "predTest":testPredValues.tolist(),
+                    "trueTest":testTargetValues.tolist(),
+                    "errors":[
+                        {
+                            "mapeVal":mapeValValue,
+                            "mseVal":mseValValue,
+                            "rmseVal":"0",
+                            "mapeTest":mapeTestValue,
+                            "mseTest":mseTestValue,
+                            "rmseTest":"0"
+                        }
+                    ]
+                }
+            )
+            
+        writeJsonFile(dictToSave, base, folderToSave)    
 
 def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model):
     # num_hidden_nodes = 40
@@ -124,80 +186,41 @@ def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNod
             writeJsonFile(dictToSave, base, folderToSave)                    
             
     # plot(baseName,"CASCADE",100,mseArray,[],[],"MSE",'','',False,True)        
-    # return mape,mse
-def getErrors(dictToRead):
-    
-    mapeValArray = []
-    mseValArray = []
-    mapeTestArray = []
-    mseTestArray = []
-    for execution in dictToRead['executions']:
-        
-        for error in execution['errors']:
-            mapeValArray.append(error['mapeVal'])
-            mseValArray.append(error['mseVal'])
-            mapeTestArray.append(error['mapeTest'])
-            mseTestArray.append(error['mseTest'])
-    
-    return mapeValArray, mseValArray, mapeTestArray, mseTestArray
-
-def getPredAndTrueValues(dictToRead, node):
-    predVal = []
-    trueVal = []
-    predTest = []
-    trueTest = []
-    for execution in dictToRead['executions']:
-        if execution['numHiddenNodes'] == node:
-            predVal = execution['predVal']
-            trueVal = execution['trueVal']
-            predTest = execution['predTest']
-            trueTest = execution['trueTest']
-
-    return predVal, trueVal, predTest, trueTest
-
-def visualizeResults(bases, dirs, titles, model, saveChart, showChart, folderToSave):
-    
-    for base in bases:
-        mseVal = []
-        mseTest = []
-        chart:Chart = Chart()
-        
-        for folder, title in zip(dirs, titles):
-        
-            fileName = folder+base
-        
-            loadedDict = readJsonFile(fileName+'.json')    
-            
-            mapeValArray, mseValArray, mapeTestArray, mseTestArray = getErrors(loadedDict)
-            mseVal.append(mseValArray)
-            mseTest.append(mseTestArray)
-            predVal, trueVal, predTest, trueTest = getPredAndTrueValues(loadedDict,2)
-            
-        chart.plotValidationAndTest(base, model, maxHiddenNodes, mseVal,
-                                mseTest, "Validation", "Test", title1, title2, showChart, saveChart, folderToSave) 
+    # return mape,mse 
     # chart.plotTable(mseValArray,filename+'MSEVal.csv')
 
 if __name__ == '__main__':
     bases = ["airlines2", "Daily Female Births Dataset",'Colorado River','Eletric','Gas','Lake Erie','Pollution','redwine', "Monthly Sunspot Dataset", "Minimum Daily Temperatures Dataset"]
     dimensions = [12,12,12,12,12,12,12,12,11,12]
-    # bases = ['Minimum Daily Temperatures Dataset']
+    # bases = ['airlines2']
     # dimensions = [12]
     upperLimit = 1
-    lowerLimit = -1
-    maxHiddenNodes = 70
+    lowerLimit = 0
+    maxHiddenNodes = 100
     minHiddenNodes = 1
-    iterations = 1    
+    iterations = 30    
+    model = "Cascade - Elm"
     today = str(date.today())            
     # executeCascade(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
+    # executeELM(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
+    titles = []
+    saveChart = False
+    showChart = True   
+    dir1 = '../data/simulations/2020-07-02 ELM Construtivo/'
+    dir2 = '../data/simulations/2020-06-20 lambda = 10/'
+    dir3 = '../data/simulations/2020-06-20 lambda = 100/'
+    dir4 = '../data/simulations/2020-06-20 lambda = 1000/'
+    dir5 = '../data/simulations/2020-06-20 lambda = 10000/'
+    dir6 = '../data/simulations/2020-06-20 lambda = 100000/'
+    # dirs = [dir1, dir2, dir3, dir4, dir5, dir6]
+    dirs = [dir1]
+    titles.append("Constructive ELM") 
+    titles.append(" with lambda = 100000")
+    folderToSave = "10000 x 100000/"
+    # titles = [title1, title2]
+    # visualizeResults(bases, dirs, titles, model, saveChart, showChart, folderToSave, maxHiddenNodes)	
     
-    model = "Cascade - ARIMA"
-    saveChart = True
-    showChart = False   
-    dir1 = '../data/simulations/2020-06-12 lambda = 10000/'
-    dir2 = '../data/simulations/2020-06-12N regularization/'
-    dirs = [dir1, dir2]
-    title1 = " with lambda = 10000" 
-    title2 = " without regularization"
-    folderToSave = "reg x no reg/"
-    titles = [title1, title2]
-    visualizeResults(bases, dirs, titles, model, saveChart, showChart, folderToSave)	
+    for folder in dirs:
+        print(folder)
+        getNumHiddenNodesSmallestError(bases, folder, model)
+        print('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
