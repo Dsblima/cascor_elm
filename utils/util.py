@@ -52,10 +52,10 @@ def load_and_preprocess_data(baseName,dimension, lowerLimit, upperLimit):
     # print("y")
     # print(y[y.columns[0]])
     # minmaxscaler = MinMaxScaler(feature_range=(0,1))
-    dataNX, listMin,  listMax  = Padronizar.normalizarLinear(x, lowerLimit, upperLimit)
-    dataNY, listMinY, listMaxY = Padronizar.normalizarLinear(y, lowerLimit, upperLimit)
+    # dataNX, listMin,  listMax  = Padronizar.normalizarLinear(x, lowerLimit, upperLimit)
+    # dataNY, listMinY, listMaxY = Padronizar.normalizarLinear(y, lowerLimit, upperLimit)
     # scalerX,scalerY, dataNormalizadoX, dataNormalizadoY = Padronizar.normalizar(x,y)
-    X_train, X_test, y_train, y_test = train_test_split(dataNX, dataNY, train_size = 0.6, test_size  = 0.4)
+    X_train, X_test, y_train, y_test = train_test_split(x, y, train_size = 0.6, test_size  = 0.4)
     X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, train_size = 0.5, test_size  = 0.5)
     
     X_train = addBias(X_train.values)    

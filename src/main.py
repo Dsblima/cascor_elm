@@ -105,85 +105,87 @@ def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNod
     # mseArray = []
     # num_hidden_nodes_array = list(range(1,101,1))
     lambdaValues = [1, 10, 100, 1000, 10000, 100000]
+    lambdaValue = 1
+    folderToSave = today+' qr fatorization'
     for base, dimension in zip(bases, dimensions):
-        for lambdaValue in lambdaValues:
-            folderToSave = today+' lambda = '+ str(lambdaValue)
-            dictToSave = {}
-            
-            print(base)
-            mseTestByNumHiddenNodesList = []
-            mapeTestByNumHiddenNodesList = []
-            mseValByNumHiddenNodesList = []
-            mapeValByNumHiddenNodesList = []
-            predValList = []
-            targetValList = []
-            predTestList = []
-            targetTestList = []
-            listNodes = list(range(minHiddenNodes, maxHiddenNodes+1))
-            
-            for num_hidden_nodes in listNodes:
-                print (base+' - '+str(num_hidden_nodes))
-                mseTestListCascade = []
-                mapeTestListCascade = []
-                mseValListCascade = []
-                mapeValListCascade = []
-                        
-                for i in list(range(1, iterations+1)):        
-                    cascade: Cascade = Cascade(num_hidden_nodes, lambdaValue)
-                    cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(base,dimension)
-                    cascade.fit(cascade.X_train,cascade.y_train)        
+        # for lambdaValue in lambdaValues:
+            # folderToSave = today+' lambda = '+ str(lambdaValue)
+        dictToSave = {}
+        
+        print(base)
+        mseTestByNumHiddenNodesList = []
+        mapeTestByNumHiddenNodesList = []
+        mseValByNumHiddenNodesList = []
+        mapeValByNumHiddenNodesList = []
+        predValList = []
+        targetValList = []
+        predTestList = []
+        targetTestList = []
+        listNodes = list(range(minHiddenNodes, maxHiddenNodes+1))
+        
+        for num_hidden_nodes in listNodes:
+            print (base+' - '+str(num_hidden_nodes))
+            mseTestListCascade = []
+            mapeTestListCascade = []
+            mseValListCascade = []
+            mapeValListCascade = []
                     
-                    predTest = cascade.predict(cascade.X_test)
-                    mapeTest, mseTest,rmseTest  = calculateResidualError(cascade.y_test, predTest)
-                    predVal = cascade.predict(cascade.X_val)
-                    mapeVal, mseVal,rmseVal  = calculateResidualError(cascade.y_val, predVal)
-                    
-                    # cascade.mapeArrayTest.append(mape)
-                    # mseArray.append(mse)
-                    
-                    mapeTestListCascade.append(mapeTest)
-                    mseTestListCascade.append(mseTest)
-                    mapeValListCascade.append(mapeVal)
-                    mseValListCascade.append(mseVal)
-                    
-                    predValList.append(predVal)
-                    targetValList.append(cascade.y_val)
-                    predTestList.append(predTest)
-                    targetTestList.append(cascade.y_test)
-                    
-                mseTestByNumHiddenNodesList.append(np.mean(mseTestListCascade))
-                mapeTestByNumHiddenNodesList.append(np.mean(mapeTestListCascade))
-                mseValByNumHiddenNodesList.append(np.mean(mseValListCascade))
-                mapeValByNumHiddenNodesList.append(np.mean(mapeValListCascade))    
-            
-            dictToSave['model'] = model
-            dictToSave['activationFunction'] = 'sigmoid'
-            dictToSave['inputsize']  = dimension
-            dictToSave['executions'] = []
-            
-            for mapeValValue, mseValValue, mapeTestValue, mseTestValue, valPredValues, valTargetValues, testPredValues, testTargetValues, numHiddenNodes in zip( mapeValByNumHiddenNodesList, mseValByNumHiddenNodesList,mapeTestByNumHiddenNodesList, mseTestByNumHiddenNodesList,  predValList, targetValList, predTestList, targetTestList, listNodes ):
+            for i in list(range(1, iterations+1)):        
+                cascade: Cascade = Cascade(num_hidden_nodes, lambdaValue)
+                cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(base,dimension, lowerLimit, upperLimit)
+                cascade.fit(cascade.X_train,cascade.y_train)        
                 
-                dictToSave['executions'].append(
-                    {
-                        "numHiddenNodes":numHiddenNodes,
-                        "predVal":valPredValues.tolist(),
-                        "trueVal":valTargetValues.tolist(),
-                        "predTest":testPredValues.tolist(),
-                        "trueTest":testTargetValues.tolist(),
-                        "errors":[
-                            {
-                                "mapeVal":mapeValValue,
-                                "mseVal":mseValValue,
-                                "rmseVal":"0",
-                                "mapeTest":mapeTestValue,
-                                "mseTest":mseTestValue,
-                                "rmseTest":"0"
-                            }
-                        ]
-                    }
-                )
+                predTest = cascade.predict(cascade.X_test)
+                mapeTest, mseTest,rmseTest  = calculateResidualError(cascade.y_test, predTest)
+                predVal = cascade.predict(cascade.X_val)
+                mapeVal, mseVal,rmseVal  = calculateResidualError(cascade.y_val, predVal)
                 
-            writeJsonFile(dictToSave, base, folderToSave)                    
+                # cascade.mapeArrayTest.append(mape)
+                # mseArray.append(mse)
+                
+                mapeTestListCascade.append(mapeTest)
+                mseTestListCascade.append(mseTest)
+                mapeValListCascade.append(mapeVal)
+                mseValListCascade.append(mseVal)
+                
+                predValList.append(predVal)
+                targetValList.append(cascade.y_val)
+                predTestList.append(predTest)
+                targetTestList.append(cascade.y_test)
+                
+            mseTestByNumHiddenNodesList.append(np.mean(mseTestListCascade))
+            mapeTestByNumHiddenNodesList.append(np.mean(mapeTestListCascade))
+            mseValByNumHiddenNodesList.append(np.mean(mseValListCascade))
+            mapeValByNumHiddenNodesList.append(np.mean(mapeValListCascade))    
+        
+        dictToSave['model'] = model
+        dictToSave['activationFunction'] = 'sigmoid'
+        dictToSave['inputsize']  = dimension
+        dictToSave['executions'] = []
+        
+        for mapeValValue, mseValValue, mapeTestValue, mseTestValue, valPredValues, valTargetValues, testPredValues, testTargetValues, numHiddenNodes in zip( mapeValByNumHiddenNodesList, mseValByNumHiddenNodesList,mapeTestByNumHiddenNodesList, mseTestByNumHiddenNodesList,  predValList, targetValList, predTestList, targetTestList, listNodes ):
+            
+            dictToSave['executions'].append(
+                {
+                    "numHiddenNodes":numHiddenNodes,
+                    "predVal":valPredValues.tolist(),
+                    "trueVal":valTargetValues.tolist(),
+                    "predTest":testPredValues.tolist(),
+                    "trueTest":testTargetValues.tolist(),
+                    "errors":[
+                        {
+                            "mapeVal":mapeValValue,
+                            "mseVal":mseValValue,
+                            "rmseVal":"0",
+                            "mapeTest":mapeTestValue,
+                            "mseTest":mseTestValue,
+                            "rmseTest":"0"
+                        }
+                    ]
+                }
+            )
+            
+        writeJsonFile(dictToSave, base, folderToSave)                    
             
     # plot(baseName,"CASCADE",100,mseArray,[],[],"MSE",'','',False,True)        
     # return mape,mse 
@@ -192,21 +194,21 @@ def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNod
 if __name__ == '__main__':
     bases = ["airlines2", "Daily Female Births Dataset",'Colorado River','Eletric','Gas','Lake Erie','Pollution','redwine', "Monthly Sunspot Dataset", "Minimum Daily Temperatures Dataset"]
     dimensions = [12,12,12,12,12,12,12,12,11,12]
-    # bases = ['airlines2']
-    # dimensions = [12]
+    bases = ['airlines2']
+    dimensions = [12]
     upperLimit = 1
     lowerLimit = 0
-    maxHiddenNodes = 100
+    maxHiddenNodes = 70
     minHiddenNodes = 1
     iterations = 30    
-    model = "Cascade - Elm"
+    model = "Cascade - Elm - IELM"
     today = str(date.today())            
-    # executeCascade(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
+    executeCascade(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
     # executeELM(today, bases, upperLimit, lowerLimit, dimensions, maxHiddenNodes, minHiddenNodes, iterations, model)    
     titles = []
     saveChart = False
     showChart = True   
-    dir1 = '../data/simulations/2020-07-02 ELM Construtivo/'
+    dir1 = '../data/simulations/'+today+' qr fatorization'+'/'
     dir2 = '../data/simulations/2020-06-20 lambda = 10/'
     dir3 = '../data/simulations/2020-06-20 lambda = 100/'
     dir4 = '../data/simulations/2020-06-20 lambda = 1000/'

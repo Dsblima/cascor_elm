@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from elm import *
+from IncrementalELM import *
 import pickle
 sys.path.append(
 	os.path.join(
@@ -138,7 +139,8 @@ class Cascade(object):
         netInv = np.linalg.pinv(neti)
         w02 = np.dot(netInv,self.y_train)
         
-        w0 = self.regularization(neti,self.y_train)
+        # w0 = self.regularization(neti,self.y_train)
+        w0 = qrFatorization(self.X_train,self.y_train)
                 
         model:Model = Model(self.weightsArray.copy(),w0.copy())
         self.saveModel(model,i)
