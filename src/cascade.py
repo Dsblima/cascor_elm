@@ -53,14 +53,18 @@ class Cascade(object):
   def init_weights(self,xcol):    
     return np.random.rand(xcol,1)
 
-  def insertHiddenUnit(self,i):
+  def insertHiddenUnit(self,i, model):
     numCol = self.X_train[0].__len__()+i
     
-    # self.generateCandidates(50,numCol)
-    
-    wh = self.init_weights(numCol)
-    self.weightsArray[i] = wh
-    # self.weightsArray[i] = self.selectBestCandidate()
+    if model == 'cconecandidate':
+      wh = self.init_weights(numCol)
+      self.weightsArray[i] = wh
+    elif model == 'ccmanycandidates':
+      self.generateCandidates(50,numCol)
+      self.weightsArray[i] = self.selectBestCandidate()
+    else:
+      print("Invalid model")
+      sys.exit(-1)                
     
     return self.forward(self.weightsArray,self.X_train)
 
@@ -129,18 +133,25 @@ class Cascade(object):
   def saveModel(self,model,position):
     self.ensemble[position] = model
     
-  def fit(self, train_set, train_target):
+  def fit(self, train_set, train_target, model, regularization):
     self.X_train = train_set
     self.y_train = train_target    
     neti = np.zeros((self.numMaxHiddenNodes,1))
     for i in list(range(self.numMaxHiddenNodes)):        
-        neti= self.insertHiddenUnit(i)
         # elm = ELM(1,self.X_train,self.y_train)
-        netInv = np.linalg.pinv(neti)
-        w02 = np.dot(netInv,self.y_train)
-        
-        # w0 = self.regularization(neti,self.y_train)
-        w0 = qrFatorization(self.X_train,self.y_train)
+        if model == 'cconecandidate' or model == 'ccmanycandidates':
+          neti= self.insertHiddenUnit(i)
+          
+          if regularization :
+            w0 = self.regularization(neti,self.y_train)
+          else:  
+            netInv = np.linalg.pinv(neti)
+            w0 = np.dot(netInv,self.y_train)        
+        elif model == 'IELM':
+          w0 = qrFatorization(self.X_train,self.y_train)
+        else:
+          print("Invalid model")
+          sys.exit(-1)
                 
         model:Model = Model(self.weightsArray.copy(),w0.copy())
         self.saveModel(model,i)
