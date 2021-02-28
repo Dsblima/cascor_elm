@@ -1,0 +1,3 @@
+Incremental ELM 
+- o objetivo do modelo proposto é encontrar uma nova função para selecionar o candidato que será inserido na rede.
+- o mofdelo usa o Orthogonal Least Squares(OLS) para encontrar a nova função.

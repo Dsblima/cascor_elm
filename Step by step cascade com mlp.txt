@@ -1,0 +1,8 @@
+CASCADE MLP
+1 - definir a quantidade de entradas
+2 - gerar os dois vetores de peso aletoriamente
+3 - executar o forward
+4 - executar o backpropagation
+5 - apresentar os exemplos até o erro parar de diminuir
+6 - adicionar uma unidade escondida que receba os valores vindos da camada de entrada e o netis das unidades escondidas pré-existentes.
+7 - volte ao passo 3
