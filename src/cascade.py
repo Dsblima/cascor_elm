@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from elm import *
-from IncrementalELM import *
+# from IncrementalELM import *
 import pickle
 sys.path.append(
 	os.path.join(
@@ -53,17 +53,17 @@ class Cascade(object):
   def init_weights(self,xcol):    
     return np.random.rand(xcol,1)
 
-  def insertHiddenUnit(self,i, model):
+  def insertHiddenUnit(self,i, modelTraining):
     numCol = self.X_train[0].__len__()+i
     
-    if model == 'cconecandidate':
+    if modelTraining == 'cconecandidate':
       wh = self.init_weights(numCol)
       self.weightsArray[i] = wh
-    elif model == 'ccmanycandidates':
+    elif modelTraining == 'ccmanycandidates':
       self.generateCandidates(50,numCol)
       self.weightsArray[i] = self.selectBestCandidate()
     else:
-      print("Invalid model")
+      print("Invalid model insert")
       sys.exit(-1)                
     
     return self.forward(self.weightsArray,self.X_train)
@@ -133,24 +133,24 @@ class Cascade(object):
   def saveModel(self,model,position):
     self.ensemble[position] = model
     
-  def fit(self, train_set, train_target, model, regularization):
+  def fit(self, train_set, train_target, modelTraining, regularization):
     self.X_train = train_set
     self.y_train = train_target    
     neti = np.zeros((self.numMaxHiddenNodes,1))
     for i in list(range(self.numMaxHiddenNodes)):        
         # elm = ELM(1,self.X_train,self.y_train)
-        if model == 'cconecandidate' or model == 'ccmanycandidates':
-          neti= self.insertHiddenUnit(i)
+        if modelTraining == 'cconecandidate' or modelTraining == 'ccmanycandidates':
+          neti= self.insertHiddenUnit(i, modelTraining)
           
           if regularization :
             w0 = self.regularization(neti,self.y_train)
           else:  
             netInv = np.linalg.pinv(neti)
             w0 = np.dot(netInv,self.y_train)        
-        elif model == 'IELM':
+        elif modelTraining == 'IELM':
           w0 = qrFatorization(self.X_train,self.y_train)
         else:
-          print("Invalid model")
+          print("Invalid model fit")
           sys.exit(-1)
                 
         model:Model = Model(self.weightsArray.copy(),w0.copy())
@@ -182,5 +182,4 @@ class Cascade(object):
       # printErrors(mape,mse)
       
     return predTeste
-  
   

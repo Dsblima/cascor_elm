@@ -35,7 +35,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
   
 def load_and_preprocess_data(baseName,dimension, lowerLimit, upperLimit):
     
-    data = File.ler('../data/'+baseName+'.txt')
+    data = File.ler('../../data/'+baseName+'.txt')
     dh:DataHandler = DataHandler(data, dimension, 60, 20,20)
     X_train, y_train, val_set, val_target, X_test, y_test, arima_train, arima_val, arima_test= dh.redimensiondata(data, dimension, 60, 20,20)
 

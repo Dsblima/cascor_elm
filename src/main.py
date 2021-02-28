@@ -106,7 +106,10 @@ def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNod
     # num_hidden_nodes_array = list(range(1,101,1))
     lambdaValues = [1, 10, 100, 1000, 10000, 100000]
     lambdaValue = 1
-    folderToSave = today+' qr fatorization'
+    trainingModel =  'cconecandidate'
+    regularization = False
+    folderToSave = today+trainingModel
+    
     for base, dimension in zip(bases, dimensions):
         # for lambdaValue in lambdaValues:
             # folderToSave = today+' lambda = '+ str(lambdaValue)
@@ -133,16 +136,13 @@ def executeCascade(today, bases,upperLimit, lowerLimit, dimensions, maxHiddenNod
             for i in list(range(1, iterations+1)):        
                 cascade: Cascade = Cascade(num_hidden_nodes, lambdaValue)
                 cascade.X_train, cascade.y_train, cascade.X_val, cascade.y_val, cascade.X_test, cascade.y_test= load_and_preprocess_data(base,dimension, lowerLimit, upperLimit)
-                cascade.fit(cascade.X_train,cascade.y_train)        
+                cascade.fit(cascade.X_train,cascade.y_train, trainingModel, regularization)        
                 
                 predTest = cascade.predict(cascade.X_test)
                 mapeTest, mseTest,rmseTest  = calculateResidualError(cascade.y_test, predTest)
                 predVal = cascade.predict(cascade.X_val)
                 mapeVal, mseVal,rmseVal  = calculateResidualError(cascade.y_val, predVal)
-                
-                # cascade.mapeArrayTest.append(mape)
-                # mseArray.append(mse)
-                
+  
                 mapeTestListCascade.append(mapeTest)
                 mseTestListCascade.append(mseTest)
                 mapeValListCascade.append(mapeVal)
